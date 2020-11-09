@@ -13,6 +13,8 @@ import re
 import sys
 import threading
 import time
+import pkgutil
+import insights
 from subprocess import Popen, PIPE, STDOUT
 
 import yaml
@@ -230,6 +232,16 @@ def modify_config_file(updates):
     write_to_disk(constants.default_conf_file, content=status['output'])
 
 
+def _insights_runner_version():
+    '''
+    Return the version of the insights-client-runner module
+    '''
+    try:
+        return pkgutil.get_data(insights.__name__, "client/VERSION").strip().decode("utf-8")
+    except:
+        return ''
+
+
 def get_version_info():
     '''
     Get the insights client and core versions for archival
@@ -242,6 +254,7 @@ def get_version_info():
     version_info = {}
     version_info['core_version'] = '%s-%s' % (package_info['VERSION'], package_info['RELEASE'])
     version_info['client_version'] = client_version
+    version_info['runner_version'] = _insights_runner_version()
     return version_info
 
 
@@ -252,6 +265,7 @@ def print_egg_versions():
     versions = get_version_info()
     logger.debug('Client version: %s', versions['client_version'])
     logger.debug('Core version: %s', versions['core_version'])
+    logger.debug('Runner version: %s', versions['runner_version'])
     logger.debug('All egg versions:')
     eggs = [
         os.getenv('EGG'),
@@ -272,7 +286,10 @@ def print_egg_versions():
             continue
         try:
             proc = Popen([sys.executable, '-c',
-                         'from insights import package_info; print(\'%s-%s\' % (package_info[\'VERSION\'], package_info[\'RELEASE\']))'],
+                         'from insights import package_info; \
+                          from insights.client.utilities import _insights_runner_version; \
+                          core_version = \'%s-%s\' % (package_info[\'VERSION\'], package_info[\'RELEASE\']); \
+                          print(\'%s / %s\' % (core_version, _insights_runner_version()))'],
                          env={'PYTHONPATH': egg, 'PATH': os.getenv('PATH')}, stdout=PIPE, stderr=STDOUT)
         except OSError:
             logger.debug('Could not start python.')
