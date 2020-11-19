@@ -1,4 +1,8 @@
-# Commit Strategy
+# Commit Syntax
+
+Follow Conventional Commits guidelines: https://www.conventionalcommits.org/en/v1.0.0/
+
+# Release Strategy
 
 Code committed to insights-client-runner will be maintained as a single `master` branch. All PRs are opened against `master`. In the below example, `master` consists of commits A, B, and C.
 
